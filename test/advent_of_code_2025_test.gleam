@@ -1,4 +1,4 @@
-import advent_of_code_2025
+import day_1
 import gleeunit
 import gleeunit/should
 
@@ -28,7 +28,7 @@ R14
 L82"
 
   instructions
-  |> advent_of_code_2025.day_1_part_a
+  |> day_1.part_a
   |> should.equal(3)
 }
 
@@ -46,6 +46,6 @@ R14
 L82"
 
   instructions
-  |> advent_of_code_2025.day_1_part_b
+  |> day_1.part_b
   |> should.equal(6)
 }
