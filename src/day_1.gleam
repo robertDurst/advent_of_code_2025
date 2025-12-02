@@ -2,14 +2,6 @@ import gleam/int
 import gleam/list
 import gleam/string
 
-fn mod_val() -> Int {
-  100
-}
-
-fn start_context() -> Context {
-  Context(location: 50, direct_zero_landings: 0, times_passing_zero: 0)
-}
-
 type Context {
   Context(location: Int, direct_zero_landings: Int, times_passing_zero: Int)
 }
@@ -20,6 +12,14 @@ type InstructionAction {
     rotation_fn: fn(Int, Int) -> Int,
     negate_zeroth: Bool,
   )
+}
+
+fn mod_val() -> Int {
+  100
+}
+
+fn start_context() -> Context {
+  Context(location: 50, direct_zero_landings: 0, times_passing_zero: 0)
 }
 
 fn interpret_instruction(instruction: String) -> Result(InstructionAction, Nil) {
@@ -46,42 +46,64 @@ fn interpret_instruction(instruction: String) -> Result(InstructionAction, Nil) 
   }
 }
 
-fn foobar(instruction_action: InstructionAction, context: Context) -> Context {
-  let dividend =
+/// In real life we might divide by zero, but here we aren't.
+fn non_assertive_modulo_100(dividend: Int) -> Int {
+  let remainder = dividend % mod_val()
+  case remainder * mod_val() < 0 {
+    True -> remainder + mod_val()
+    False -> remainder
+  }
+}
+
+fn count_if_on_zero(location: Int, previous_direct_zero_landings: Int) -> Int {
+  case location {
+    0 -> previous_direct_zero_landings + 1
+    _ -> previous_direct_zero_landings
+  }
+}
+
+/// To get the times we pass zero, if we're adding, it's just the integer division
+/// by 100, i.e. 50 + 200 = 2. However, if we're subtracting, we pass zero the other
+/// way and thus in order to take a similar approach, if we're not already on zero,
+/// in which case we'd negate to 100, we subtract 100 to get the "flip" and then
+/// employ the same strategy. Unsure what the exact mathematical terminology is
+/// here, so excuse the hand wavy explanation.
+fn mod_location_based_on_context(location: Int, negate_zeroth: Bool) -> Int {
+  case location, negate_zeroth {
+    _, True | 0, False -> location
+    _, False -> mod_val() - location
+  }
+}
+
+fn execute_instruction(
+  instruction_action: InstructionAction,
+  context: Context,
+) -> Context {
+  let new_location =
     instruction_action.rotation_fn(
       context.location,
       instruction_action.rotation_count,
     )
+    |> non_assertive_modulo_100
 
-  let remainder = dividend % mod_val()
-  let final_remainder = case remainder * mod_val() < 0 {
-    True -> remainder + mod_val()
-    False -> remainder
-  }
-
-  let assert Ok(extra_to_add) = {
-    case context.location, instruction_action.negate_zeroth {
-      _, True ->
-        int.add(context.location, instruction_action.rotation_count)
-        |> int.divide(mod_val())
-      0, False ->
-        int.add(context.location, instruction_action.rotation_count)
-        |> int.divide(mod_val())
-      _, False ->
-        int.add(mod_val() - context.location, instruction_action.rotation_count)
-        |> int.divide(mod_val())
-    }
-  }
-
-  let new_iterations = case final_remainder {
-    0 -> context.direct_zero_landings + 1
-    _ -> context.direct_zero_landings
-  }
+  let times_passed_zero_this_execution =
+    int.add(
+      mod_location_based_on_context(
+        context.location,
+        instruction_action.negate_zeroth,
+      ),
+      instruction_action.rotation_count,
+    )
+    / mod_val()
 
   Context(
-    location: final_remainder,
-    direct_zero_landings: new_iterations,
-    times_passing_zero: context.times_passing_zero + extra_to_add,
+    location: new_location,
+    direct_zero_landings: count_if_on_zero(
+      new_location,
+      context.direct_zero_landings,
+    ),
+    times_passing_zero: context.times_passing_zero
+      + times_passed_zero_this_execution,
   )
 }
 
@@ -90,7 +112,7 @@ fn part_agnostic_instruction_handler(instructions: String) -> Context {
   |> string.split("\n")
   |> list.filter_map(interpret_instruction)
   |> list.fold(start_context(), fn(context, instruction_action) -> Context {
-    foobar(instruction_action, context)
+    execute_instruction(instruction_action, context)
   })
 }
 
