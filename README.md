@@ -1,24 +1,14 @@
 # advent_of_code_2025
 
-[![Package Version](https://img.shields.io/hexpm/v/advent_of_code_2025)](https://hex.pm/packages/advent_of_code_2025)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/advent_of_code_2025/)
-
-```sh
-gleam add advent_of_code_2025@1
-```
-```gleam
-import advent_of_code_2025
-
-pub fn main() -> Nil {
-  // TODO: An example of the project in use
-}
-```
-
-Further documentation can be found at <https://hexdocs.pm/advent_of_code_2025>.
-
-## Development
-
-```sh
-gleam run   # Run the project
-gleam test  # Run the tests
-```
+* [x] Day 1
+* [ ] Day 2
+* [ ] Day 3
+* [ ] Day 4
+* [ ] Day 5
+* [ ] Day 6
+* [ ] Day 7
+* [ ] Day 8
+* [ ] Day 9
+* [ ] Day 10
+* [ ] Day 11
+* [ ] Day 12
